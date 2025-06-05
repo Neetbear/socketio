@@ -21,11 +21,12 @@ const (
 )
 
 var (
-	ErrorServerNotSet       = errors.New("Server not set")
-	ErrorConnectionNotFound = errors.New("Connection not found")
+	ErrorServerNotSet       = errors.New("server not set")
+	ErrorConnectionNotFound = errors.New("connection not found")
 )
 
-/**
+/*
+*
 socket.io server instance
 */
 type Server struct {
@@ -43,7 +44,8 @@ type Server struct {
 	tr transport.Transport
 }
 
-/**
+/*
+*
 Close current channel
 */
 func (c *Channel) Close() {
@@ -52,7 +54,8 @@ func (c *Channel) Close() {
 	}
 }
 
-/**
+/*
+*
 Get ip of socket client
 */
 func (c *Channel) Ip() string {
@@ -63,21 +66,24 @@ func (c *Channel) Ip() string {
 	return c.ip
 }
 
-/**
+/*
+*
 Get request header of this connection
 */
 func (c *Channel) RequestHeader() http.Header {
 	return c.request.Header
 }
 
-/**
+/*
+*
 Get request
 */
 func (c *Channel) Request() *http.Request {
 	return c.request
 }
 
-/**
+/*
+*
 Get channel by it's sid
 */
 func (s *Server) GetChannel(sid string) (*Channel, error) {
@@ -92,7 +98,8 @@ func (s *Server) GetChannel(sid string) (*Channel, error) {
 	return c, nil
 }
 
-/**
+/*
+*
 Join this channel to given room
 */
 func (c *Channel) Join(room string) error {
@@ -119,7 +126,8 @@ func (c *Channel) Join(room string) error {
 	return nil
 }
 
-/**
+/*
+*
 Remove this channel from given room
 */
 func (c *Channel) Leave(room string) error {
@@ -146,7 +154,8 @@ func (c *Channel) Leave(room string) error {
 	return nil
 }
 
-/**
+/*
+*
 Get amount of channels, joined to given room, using channel
 */
 func (c *Channel) Amount(room string) int {
@@ -157,18 +166,20 @@ func (c *Channel) Amount(room string) int {
 	return c.server.Amount(room)
 }
 
-/**
+/*
+*
 Get amount of channels, joined to given room, using server
 */
 func (s *Server) Amount(room string) int {
 	s.channelsLock.RLock()
 	defer s.channelsLock.RUnlock()
 
-	roomChannels, _ := s.channels[room]
+	roomChannels := s.channels[room]
 	return len(roomChannels)
 }
 
-/**
+/*
+*
 Get list of channels, joined to given room, using channel
 */
 func (c *Channel) List(room string) []*Channel {
@@ -179,7 +190,8 @@ func (c *Channel) List(room string) []*Channel {
 	return c.server.List(room)
 }
 
-/**
+/*
+*
 Get list of channels, joined to given room, using server
 */
 func (s *Server) List(room string) []*Channel {
@@ -202,7 +214,7 @@ func (s *Server) List(room string) []*Channel {
 
 }
 
-func (c *Channel) BroadcastTo(room, method string, args interface{}) {
+func (c *Channel) BroadcastTo(room, method string, args any) {
 	if c.server == nil {
 		return
 	}
@@ -222,10 +234,11 @@ func (c *Channel) BroadcastTo(room, method string, args interface{}) {
 	}
 }
 
-/**
+/*
+*
 Broadcast message to all room channels
 */
-func (s *Server) BroadcastTo(room, method string, args interface{}) {
+func (s *Server) BroadcastTo(room, method string, args any) {
 	s.channelsLock.RLock()
 	defer s.channelsLock.RUnlock()
 
@@ -241,10 +254,11 @@ func (s *Server) BroadcastTo(room, method string, args interface{}) {
 	}
 }
 
-/**
+/*
+*
 Broadcast to all clients
 */
-func (s *Server) BroadcastToAll(method string, args interface{}) {
+func (s *Server) BroadcastToAll(method string, args any) {
 	s.sidsLock.RLock()
 	defer s.sidsLock.RUnlock()
 
@@ -255,11 +269,12 @@ func (s *Server) BroadcastToAll(method string, args interface{}) {
 	}
 }
 
-/**
+/*
+*
 Generate new id for socket.io connection
 */
 func generateNewId(custom string) string {
-	hash := fmt.Sprintf("%s %s %n %n", custom, time.Now(), rand.Uint32(), rand.Uint32())
+	hash := fmt.Sprintf("%s %s %d %d", custom, time.Now(), rand.Uint32(), rand.Uint32())
 	buf := bytes.NewBuffer(nil)
 	sum := md5.Sum([]byte(hash))
 	encoder := base64.NewEncoder(base64.URLEncoding, buf)
@@ -268,7 +283,8 @@ func generateNewId(custom string) string {
 	return buf.String()[:20]
 }
 
-/**
+/*
+*
 On connection system handler, store sid
 */
 func onConnectStore(c *Channel) {
@@ -278,7 +294,8 @@ func onConnectStore(c *Channel) {
 	c.server.sids[c.Id()] = c
 }
 
-/**
+/*
+*
 On disconnection system handler, clean joins and sid
 */
 func onDisconnectCleanup(c *Channel) {
@@ -326,7 +343,8 @@ func (s *Server) SendOpenSequence(c *Channel) {
 	c.out <- protocol.MustEncode(&protocol.Message{Type: protocol.MessageTypeEmpty})
 }
 
-/**
+/*
+*
 Setup event loop for given connection
 */
 func (s *Server) SetupEventLoop(conn transport.Connection, remoteAddr string,
@@ -357,7 +375,8 @@ func (s *Server) SetupEventLoop(conn transport.Connection, remoteAddr string,
 	s.callLoopEvent(c, OnConnection)
 }
 
-/**
+/*
+*
 implements ServeHTTP function from http.Handler
 */
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -374,7 +393,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.tr.Serve(w, r)
 }
 
-/**
+/*
+*
 Get amount of current connected sids
 */
 func (s *Server) AmountOfSids() int64 {
@@ -384,7 +404,8 @@ func (s *Server) AmountOfSids() int64 {
 	return int64(len(s.sids))
 }
 
-/**
+/*
+*
 Get amount of rooms with at least one channel(or sid) joined
 */
 func (s *Server) AmountOfRooms() int64 {
@@ -394,7 +415,8 @@ func (s *Server) AmountOfRooms() int64 {
 	return int64(len(s.channels))
 }
 
-/**
+/*
+*
 Enables CORS for all domains
 */
 func (s *Server) EnableCORS(domain string) {
@@ -402,21 +424,24 @@ func (s *Server) EnableCORS(domain string) {
 	s.headers["Access-Control-Allow-Credentials"] = "true"
 }
 
-/**
+/*
+*
 Add a header to HTTP responses
 */
 func (s *Server) AddHeader(name string, value string) {
 	s.headers[name] = value
 }
 
-/**
+/*
+*
 Replaces the pre-configured transport
 */
 func (s *Server) UpdateTransport(tr transport.Transport) {
 	s.tr = tr
 }
 
-/**
+/*
+*
 Create new socket.io server
 */
 func NewServer(tr transport.Transport) *Server {

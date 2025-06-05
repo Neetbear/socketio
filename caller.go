@@ -18,11 +18,12 @@ var (
 	ErrorCallerMaxOneValue = errors.New("f should return not more than one value")
 )
 
-/**
+/*
+*
 Parses function passed by using reflection, and stores its representation
 for further call on message or ack
 */
-func newCaller(f interface{}) (*caller, error) {
+func newCaller(f any) (*caller, error) {
 	fVal := reflect.ValueOf(f)
 	if fVal.Kind() != reflect.Func {
 		return nil, ErrorCallerNotFunc
@@ -50,17 +51,19 @@ func newCaller(f interface{}) (*caller, error) {
 	return curCaller, nil
 }
 
-/**
+/*
+*
 returns function parameter as it is present in it using reflection
 */
-func (c *caller) getArgs() interface{} {
+func (c *caller) getArgs() any {
 	return reflect.New(c.Args).Interface()
 }
 
-/**
+/*
+*
 calls function with given arguments from its representation using reflection
 */
-func (c *caller) callFunc(h *Channel, args interface{}) []reflect.Value {
+func (c *caller) callFunc(h *Channel, args any) []reflect.Value {
 	//nil is untyped, so use the default empty value of correct type
 	if args == nil {
 		args = c.getArgs()

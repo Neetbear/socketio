@@ -83,7 +83,7 @@ var socket = io('ws://yourdomain.com', {transports: ['websocket']});
 	// --- caller is default handlers
 
 	//on connection handler, occurs once for each connected client
-	server.On(gosocketio.OnConnection, func(c *gosocketio.Channel, args interface{}) {
+	server.On(gosocketio.OnConnection, func(c *gosocketio.Channel, args any) {
 	    //client id is unique
 		log.Println("New client connected, client id is ", c.Id())
 

@@ -15,13 +15,13 @@ const (
 	ackMessage    = "43"
 
 	CloseMessage = "1"
-	PingMessage = "2"
-	PongMessage = "3"
+	PingMessage  = "2"
+	PongMessage  = "3"
 )
 
 var (
-	ErrorWrongMessageType = errors.New("Wrong message type")
-	ErrorWrongPacket      = errors.New("Wrong packet")
+	ErrorWrongMessageType = errors.New("wrong message type")
+	ErrorWrongPacket      = errors.New("wrong packet")
 )
 
 func typeToText(msgType int) (string, error) {
@@ -113,7 +113,8 @@ func getMessageType(data string) (int, error) {
 	return 0, ErrorWrongMessageType
 }
 
-/**
+/*
+*
 Get ack id of current packet, if present
 */
 func getAck(text string) (ackId int, restText string, err error) {
@@ -135,7 +136,8 @@ func getAck(text string) (ackId int, restText string, err error) {
 	return ack, text[pos:], nil
 }
 
-/**
+/*
+*
 Get message method of current packet, if present
 */
 func getMethod(text string) (method, restText string, err error) {

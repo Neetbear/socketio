@@ -3,7 +3,7 @@ package transport
 import (
 	"crypto/tls"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -21,11 +21,11 @@ const (
 )
 
 var (
-	ErrorBinaryMessage     = errors.New("Binary messages are not supported")
-	ErrorBadBuffer         = errors.New("Buffer error")
-	ErrorPacketWrong       = errors.New("Wrong packet type error")
-	ErrorMethodNotAllowed  = errors.New("Method not allowed")
-	ErrorHttpUpgradeFailed = errors.New("Http upgrade failed")
+	ErrorBinaryMessage     = errors.New("binary messages are not supported")
+	ErrorBadBuffer         = errors.New("buffer error")
+	ErrorPacketWrong       = errors.New("wrong packet type error")
+	ErrorMethodNotAllowed  = errors.New("method not allowed")
+	ErrorHttpUpgradeFailed = errors.New("http upgrade failed")
 )
 
 type WebsocketConnection struct {
@@ -45,7 +45,7 @@ func (wsc *WebsocketConnection) GetMessage() (message string, err error) {
 		return "", ErrorBinaryMessage
 	}
 
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return "", ErrorBadBuffer
 	}
@@ -109,25 +109,28 @@ func (wst *WebsocketTransport) HandleConnection(
 	w http.ResponseWriter, r *http.Request) (conn Connection, err error) {
 
 	if r.Method != "GET" {
-		http.Error(w, upgradeFailed+ErrorMethodNotAllowed.Error(), 503)
+		http.Error(w, upgradeFailed+ErrorMethodNotAllowed.Error(), http.StatusServiceUnavailable)
 		return nil, ErrorMethodNotAllowed
 	}
 
-	socket, err := websocket.Upgrade(w, r, nil, wst.BufferSize, wst.BufferSize)
+	u := websocket.Upgrader{ReadBufferSize: wst.BufferSize, WriteBufferSize: wst.BufferSize}
+	socket, err := u.Upgrade(w, r, nil)
 	if err != nil {
-		http.Error(w, upgradeFailed+err.Error(), 503)
+		http.Error(w, upgradeFailed+err.Error(), http.StatusServiceUnavailable)
 		return nil, ErrorHttpUpgradeFailed
 	}
 
 	return &WebsocketConnection{socket, wst}, nil
 }
 
-/**
+/*
+*
 Websocket connection do not require any additional processing
 */
 func (wst *WebsocketTransport) Serve(w http.ResponseWriter, r *http.Request) {}
 
-/**
+/*
+*
 Returns websocket connection with default params
 */
 func GetDefaultWebsocketTransport() *WebsocketTransport {

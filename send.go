@@ -10,14 +10,15 @@ import (
 )
 
 var (
-	ErrorSendTimeout     = errors.New("Timeout")
-	ErrorSocketOverflood = errors.New("Socket overflood")
+	ErrorSendTimeout     = errors.New("timeout")
+	ErrorSocketOverflood = errors.New("socket overflood")
 )
 
-/**
+/*
+*
 Send message packet to socket
 */
-func send(msg *protocol.Message, c *Channel, args interface{}) error {
+func send(msg *protocol.Message, c *Channel, args any) error {
 	//preventing json/encoding "index out of range" panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -48,10 +49,11 @@ func send(msg *protocol.Message, c *Channel, args interface{}) error {
 	return nil
 }
 
-/**
+/*
+*
 Create packet based on given data and send it
 */
-func (c *Channel) Emit(method string, args interface{}) error {
+func (c *Channel) Emit(method string, args any) error {
 	msg := &protocol.Message{
 		Type:   protocol.MessageTypeEmit,
 		Method: method,
@@ -60,10 +62,11 @@ func (c *Channel) Emit(method string, args interface{}) error {
 	return send(msg, c, args)
 }
 
-/**
+/*
+*
 Create ack packet based on given data and send it and receive response
 */
-func (c *Channel) Ack(method string, args interface{}, timeout time.Duration) (string, error) {
+func (c *Channel) Ack(method string, args any, timeout time.Duration) (string, error) {
 	msg := &protocol.Message{
 		Type:   protocol.MessageTypeAckRequest,
 		AckId:  c.ack.getNextId(),

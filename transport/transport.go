@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-/**
+/*
+*
 End-point connection for given transport
 */
 type Connection interface {
@@ -30,7 +31,8 @@ type Connection interface {
 	PingParams() (interval, timeout time.Duration)
 }
 
-/**
+/*
+*
 Connection factory for given transport
 */
 type Transport interface {

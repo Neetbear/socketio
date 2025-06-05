@@ -16,10 +16,11 @@ const (
 )
 
 var (
-	ErrorWrongHeader = errors.New("Wrong header")
+	ErrorWrongHeader = errors.New("wrong header")
 )
 
-/**
+/*
+*
 engine.io header to send or receive
 */
 type Header struct {
@@ -29,7 +30,8 @@ type Header struct {
 	PingTimeout  int      `json:"pingTimeout"`
 }
 
-/**
+/*
+*
 socket.io connection handler
 
 use IsAlive to check that handler is still working
@@ -54,24 +56,27 @@ type Channel struct {
 	request *http.Request
 }
 
-/**
+/*
+*
 create channel, map, and set active
 */
 func (c *Channel) initChannel() {
-	//TODO: queueBufferSize from constant to server or client variable
+	// @todo queueBufferSize from constant to server or client variable
 	c.out = make(chan string, queueBufferSize)
 	//c.ack.resultWaiters = make(map[int](chan string))
 	c.setAliveValue(true)
 }
 
-/**
+/*
+*
 Get id of current socket connection
 */
 func (c *Channel) Id() string {
 	return c.header.Sid
 }
 
-/**
+/*
+*
 Checks that Channel is still alive
 */
 func (c *Channel) IsAlive() bool {
@@ -88,10 +93,12 @@ func (c *Channel) setAliveValue(value bool) {
 	c.aliveLock.Unlock()
 }
 
-/**
+/*
+*
 Close channel
 */
-func closeChannel(c *Channel, m *methods, args ...interface{}) error {
+// @todo need to check args is necessary
+func closeChannel(c *Channel, m *methods, args ...any) error {
 	if !c.IsAlive() {
 		//already closed
 		return nil
@@ -107,14 +114,14 @@ func closeChannel(c *Channel, m *methods, args ...interface{}) error {
 	}
 
 	c.out <- protocol.CloseMessage
-	m.callLoopEvent(c, OnDisconnection)
+	m.callLoopEvent(c, OnDisconnection, args...)
 
 	deleteOverflooded(c)
 
 	return nil
 }
 
-//incoming messages loop, puts incoming messages to In channel
+// incoming messages loop, puts incoming messages to In channel
 func inLoop(c *Channel, m *methods) error {
 	for {
 		pkg, err := c.conn.GetMessage()
@@ -152,7 +159,8 @@ func storeOverflow(c *Channel) {
 	overflooded.Store(c, struct{}{})
 }
 
-/**
+/*
+*
 outgoing messages loop, sends messages from channel to socket
 */
 func outLoop(c *Channel, m *methods) error {
@@ -178,7 +186,8 @@ func outLoop(c *Channel, m *methods) error {
 	}
 }
 
-/**
+/*
+*
 Pinger sends ping messages for keeping connection alive
 */
 func pinger(c *Channel) {
